@@ -5,6 +5,106 @@ Day 7-8: 异步编程基础
 """
 
 # ================================
+# 0. 异步编程核心概念 - Java开发者必读
+# ================================
+
+"""
+【什么是异步编程】
+异步编程是一种非阻塞的编程范式，允许程序在等待I/O操作时继续执行其他任务。
+核心机制：协程+ 事件循环
+
+【和Java的对比】
+| 维度 | Python async/await | Java并发方案 |
+|-----|-------------------|------------|
+| 并发单位 | 协程 | 线程 |
+| 调度方式 | 协作式（主动让出） | 抢占式（OS切换） |
+| 内存开销 | ~2KB | ~1MB |
+| 并行能力 | 单线程（受GIL限制） | 多线程真正并行 |
+| 适用场景 | I/O密集型 | I/O密集型 + CPU密集型 |
+
+【关键概念对比表】
+
+Python async                      Java 对应方案
+─────────────────────────────────────────────────────
+async def                         Runnable/Callable
+await task                        Future.get()
+asyncio.run()                     ExecutorService.submit()
+asyncio.gather()                  CompletableFuture.allOf()
+asyncio.create_task()             CompletableFuture.supplyAsync()
+asyncio.Semaphore                 java.util.concurrent.Semaphore
+asyncio.Queue                     BlockingQueue
+
+【Python协程 vs Java线程的本质区别】
+
+1. 调度机制：
+   - Python: 协程在单线程内协作式调度（await主动让出控制权）
+   - Java: 线程由操作系统抢占式调度（可能随时被切换）
+
+2. GIL（全局解释器锁）的影响：
+   - Python: 同一时刻只有一个线程执行Python字节码
+   - Java: 多线程真正并行执行
+
+3. 创建开销：
+   - Python协程: 创建成本极低（~2KB），可以轻松创建10万+协程
+   - Java线程: 创建成本高（~1MB），通常限制线程池大小
+
+4. 适用场景：
+   Python async ✅ 适用：
+   - HTTP API调用
+   - 数据库查询
+   - 文件I/O
+   - 网络通信
+
+   Python async ❌ 不适用：
+   - CPU密集计算（GIL限制，用multiprocessing代替）
+   - 简单脚本（增加复杂度不值得）
+
+   Java线程 ✅ 适用：
+   - CPU密集计算
+   - I/O密集型
+   - 阻塞操作
+
+【async/await的工作原理】
+
+async def my_func():
+    result = await other_func()
+    # ↑ 等价于：
+    # 1. 暂停当前协程，保存状态
+    # 2. 让出控制权给事件循环
+    # 3. 事件循环调度其他协程执行
+    # 4. other_func()完成后恢复当前协程
+
+【事件循环】
+Python asyncio的事件循环类似于Java的ExecutorService，负责：
+- 调度协程执行
+- 管理I/O事件
+- 处理定时任务
+- 协调协程间的切换
+
+【常见陷阱】
+1. 在async函数中调用阻塞函数（如time.sleep、requests.get）
+   → 会阻塞整个事件循环！必须用asyncio.sleep、aiohttp
+2. 忘记await协程
+   → 协程不会执行，只是创建了一个coroutine对象
+3. 混用同步和异步代码
+   → 需要用asyncio.run_in_executor()包装同步代码
+
+【最佳实践】
+1. I/O密集型任务优先用异步
+2. CPU密集型用multiprocessing（绕过GIL）
+3. 已有的同步库用run_in_executor包装
+4. 使用aiohttp代替requests
+5. 使用asyncpg/aiomysql代替psycopg2/mysql-connector
+
+【Java开发者迁移建议】
+- Java Thread → Python asyncio.create_task()
+- Java ExecutorService → Python asyncio.run()
+- Java Future.get() → Python await task
+- Java CompletableFuture.thenApply() → Python async函数组合
+- Java synchronized → Python asyncio.Lock()
+"""
+
+# ================================
 # 1. 同步 vs 异步（概念理解）
 # ================================
 

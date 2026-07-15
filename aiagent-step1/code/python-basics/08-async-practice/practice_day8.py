@@ -13,7 +13,7 @@ Day 8: 异步编程练习题
 import asyncio
 import time
 import random
-from typing import List, Dict, Any, Callable
+from typing import List, Dict, Any, Callable, Optional
 from collections import defaultdict
 
 
@@ -75,12 +75,14 @@ class BatchRequestMerger:
         future = asyncio.Future()
         self.pending_requests.append((request_data, future))
         
+        # 简化实现：如果达到批量上限，立即处理；否则稍后处理
         if len(self.pending_requests) >= self.batch_size:
-            asyncio.create_task(self._process_batch())
+            await self._process_batch()
         else:
+            # 短暂等待，然后处理
             await asyncio.sleep(self.wait_time)
-            if not future.done():
-                asyncio.create_task(self._process_batch())
+            if self.pending_requests and not future.done():
+                await self._process_batch()
         
         return await future
     
@@ -381,7 +383,7 @@ class AsyncTaskGraph:
         self.dependencies = defaultdict(list)
         self.results = {}
     
-    def add_task(self, task_id: str, task_func: Callable, depends_on: List[str] = None):
+    def add_task(self, task_id: str, task_func: Callable, depends_on: Optional[List[str]] = None):
         """
         添加任务
         
@@ -452,9 +454,10 @@ class AsyncTaskGraph:
                 break
             
             async def run_task(task_id):
-                deps_results = {dep: self.results[dep] for dep in self.dependencies[task_id]}
-                if deps_results:
-                    result = await self.tasks[task_id](**deps_results)
+                dep_ids = self.dependencies[task_id]
+                if dep_ids:
+                    dep_values = [self.results[dep_id] for dep_id in dep_ids]
+                    result = await self.tasks[task_id](*dep_values)
                 else:
                     result = await self.tasks[task_id]()
                 self.results[task_id] = result
@@ -573,21 +576,28 @@ class AsyncConnectionPool:
         """
         # TODO: 你的实现
         # 占位符实现 - 请替换为你的实际实现
-        async with self.lock:
-            if not self.available.empty():
-                conn = await self.available.get()
-                self.in_use.add(conn["id"])
-                return conn
+        while True:
+            need_create = False
+            conn_id = 0
             
-            if len(self.in_use) < self.max_connections:
-                conn = await self._create_connection()
-                self.in_use.add(conn["id"])
-                return conn
-        
-        conn = await self.available.get()
-        async with self.lock:
-            self.in_use.add(conn["id"])
-        return conn
+            async with self.lock:
+                if not self.available.empty():
+                    conn = await self.available.get()
+                    self.in_use.add(conn["id"])
+                    return conn
+                
+                if len(self.in_use) < self.max_connections:
+                    conn_id = self.connection_count
+                    self.in_use.add(conn_id)
+                    self.connection_count += 1
+                    need_create = True
+            
+            if need_create:
+                await asyncio.sleep(0.1)
+                print(f"  创建连接: conn_{conn_id}")
+                return {"id": conn_id, "created_at": time.time()}
+            
+            await asyncio.sleep(0.01)
     
     async def release(self, conn: Dict):
         """
@@ -694,7 +704,21 @@ class AsyncCircuitBreaker:
         5. 执行成功/失败后更新状态
         """
         # TODO: 你的实现
-        pass
+        # 占位符实现 - 请替换为你的实际实现
+        async with self.lock:
+            if self.state == CircuitState.OPEN:
+                if self.last_failure_time and time.time() - self.last_failure_time >= self.recovery_time:
+                    self.state = CircuitState.HALF_OPEN
+                else:
+                    raise Exception("熔断器打开，拒绝请求")
+        
+        try:
+            result = await func(*args, **kwargs)
+            await self._on_success()
+            return result
+        except Exception as e:
+            await self._on_failure()
+            raise e
     
     async def _on_success(self):
         """成功时更新状态"""
@@ -719,7 +743,7 @@ async def test_circuit_breaker():
     print("练习 6：异步熔断器")
     print("=" * 60)
     
-    breaker = AsyncCircuitBreaker(failure_threshold=3, recovery_time=2.0)
+    breaker = AsyncCircuitBreaker(failure_threshold=3, recovery_time=1.0)
     
     # 模拟不稳定的服务
     call_count = 0

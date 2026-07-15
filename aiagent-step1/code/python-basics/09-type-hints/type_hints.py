@@ -5,6 +5,119 @@ Day 10: 类型注解（Type Hints）
 """
 
 # ================================
+# 0. 类型注解核心概念 - Java开发者必读
+# ================================
+
+"""
+【⚠️ 关键警告：Python类型注解运行时不检查！】
+
+Python类型注解是**静态提示**，运行时**不强制检查**！
+
+# Java（编译时检查 + 运行时检查）
+String name = 123;  // 编译错误！类型不匹配
+
+# Python（运行时不检查）
+name: str = 123  # 运行正常！但mypy会报静态错误
+print(type(name))  # 输出: <class 'int'>
+
+【和Java强类型系统的本质区别】
+
+| 特性 | Java | Python |
+|-----|------|--------|
+| 类型检查时机 | 编译时（强制） | 静态分析时（可选） |
+| 运行时检查 | 强制类型安全 | 不检查 |
+| 类型擦除 | 否 | 是（运行时注解可被忽略） |
+| IDE支持 | 完整 | 部分依赖类型注解 |
+| 错误后果 | 编译失败 | 运行时可能出错 |
+
+【为什么Python需要类型注解？】
+
+1. IDE智能提示和自动补全（VS Code、PyCharm）
+2. 静态检查发现潜在错误（mypy、pyright）
+3. 代码文档和可读性（函数签名即文档）
+4. 团队协作规范（大型项目必需）
+5. 重构工具支持（安全重命名、类型感知重构）
+
+【工具配置】
+
+# 安装mypy
+pip install mypy
+
+# 运行类型检查
+mypy your_script.py
+
+# VS Code配置（settings.json）
+{
+    "python.analysis.typeCheckingMode": "basic"
+}
+
+# pyproject.toml配置
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+
+【类型注解的工作原理】
+
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+# 运行时：name: str 只是注解，存储在 __annotations__
+print(greet.__annotations__)  # {'name': <class 'str'>, 'return': <class 'str'>}
+
+# 运行时：类型注解不影响执行
+greet(123)  # 正常运行！返回 "Hello, 123"
+
+# 静态检查时：mypy会发现类型错误
+# mypy output: error: Argument 1 to "greet" has incompatible type "int"; expected "str"
+
+【常见陷阱】
+
+1. 类型注解不等于类型强制
+   value: int = "string"  # mypy报错，但运行正常
+
+2. Optional vs None
+   def func(x: Optional[str]): pass
+   func(None)  # 正确
+   func(123)   # mypy报错，但运行正常
+
+3. 泛型类型需要导入
+   from typing import List, Dict, Optional
+
+4. 类型别名需要TypeAlias
+   from typing import TypeAlias
+   UserId: TypeAlias = int  # Python 3.10+
+
+【最佳实践】
+
+1. 公共API必须添加类型注解（函数签名、参数、返回值）
+2. 使用mypy进行静态检查（CI/CD集成）
+3. 复杂类型定义类型别名
+4. 使用Protocol代替抽象基类（鸭子类型）
+5. 结合Pydantic做运行时验证（API数据验证）
+
+【Java开发者迁移建议】
+
+Java类型 → Python类型注解
+───────────────────────────────
+String → str
+int → int
+boolean → bool
+List<String> → list[str] 或 List[str]
+Map<K,V> → dict[K, V] 或 Dict[K, V]
+Optional<T> → Optional[T] 或 T | None (3.10+)
+Object → Any
+void → None
+
+Java注解 → Python类型注解
+───────────────────────────────
+@NotNull → 不需要（默认可None）
+@Nullable → Optional[T]
+@Override → 无对应（装饰器）
+@interface → typing.Protocol 或 typing.TypedDict
+"""
+
+# ================================
 # 1. 基础类型注解
 # ================================
 
