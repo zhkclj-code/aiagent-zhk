@@ -272,9 +272,9 @@ finally:
 # }
 
 # Python 写法（with 语句自动管理资源）：
-# with open("test.txt", "r", encoding="utf-8") as f:
-#     content = f.read()
-#     print(content)
+with open("test.txt", "r", encoding="utf-8") as f:
+    content = f.read()
+    print(content)
 
 
 # ================================
