@@ -116,7 +116,7 @@ class OpenAICompatibleClient:
     def _message_payload(message: Message) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "role": message.role,
-            "content": message.content or "",
+            "content": message.content,
         }
         if message.role == "assistant" and message.tool_calls:
             payload["tool_calls"] = [

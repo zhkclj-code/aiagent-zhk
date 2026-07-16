@@ -60,4 +60,3 @@ async def _interactive(agent: MiniAgent) -> int:
 
 def main() -> NoReturn:
     raise SystemExit(asyncio.run(run_cli()))
-

@@ -59,6 +59,24 @@ async def test_agent_stops_after_tool_round_limit() -> None:
         await agent.run("不断调用工具")
 
 
+async def test_agent_history_remains_reusable_after_loop_limit() -> None:
+    client = FakeLLMClient(
+        replies=[
+            LLMReply(tool_calls=[ToolCall(id="c1", name="current_time", arguments={})]),
+            LLMReply(tool_calls=[ToolCall(id="c2", name="current_time", arguments={})]),
+            LLMReply(content="已恢复"),
+        ]
+    )
+    agent = MiniAgent(client, ToolRegistry.default(), max_tool_rounds=1)
+
+    with pytest.raises(AgentLoopError):
+        await agent.run("不断调用工具")
+
+    assert agent.history[-1].role == "tool"
+    response = await agent.run("继续")
+    assert response.content == "已恢复"
+
+
 async def test_agent_keeps_history_until_cleared() -> None:
     client = FakeLLMClient(replies=[LLMReply(content="第一轮"), LLMReply(content="第二轮")])
     agent = MiniAgent(client, ToolRegistry.default())

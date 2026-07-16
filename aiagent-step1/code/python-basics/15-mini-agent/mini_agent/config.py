@@ -24,6 +24,8 @@ class AgentSettings:
             raise ConfigurationError(f"不支持的 provider: {self.provider}")
         if self.max_tool_rounds < 1:
             raise ConfigurationError("MINI_AGENT_MAX_TOOL_ROUNDS 必须大于 0")
+        if not self.model.strip():
+            raise ConfigurationError("model 不能为空")
 
     @classmethod
     def from_env(cls, provider_override: str | None = None) -> "AgentSettings":
@@ -51,10 +53,10 @@ def create_client(settings: AgentSettings) -> LLMClient:
 
     if settings.provider == "fake":
         return FakeLLMClient()
-    if not settings.api_key:
+    if not settings.api_key or not settings.api_key.strip():
         raise ConfigurationError("使用 openai provider 时必须设置 OPENAI_API_KEY")
     return OpenAICompatibleClient.create(
-        api_key=settings.api_key,
+        api_key=settings.api_key.strip(),
         base_url=settings.base_url,
         model=settings.model,
     )

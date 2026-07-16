@@ -5,6 +5,19 @@ from mini_agent.config import AgentSettings, create_client
 from mini_agent.errors import ConfigurationError
 
 
+@pytest.fixture(autouse=True)
+def isolate_agent_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("mini_agent.config.load_dotenv", lambda: False)
+    for name in (
+        "MINI_AGENT_PROVIDER",
+        "MINI_AGENT_MAX_TOOL_ROUNDS",
+        "OPENAI_API_KEY",
+        "OPENAI_API_BASE",
+        "OPENAI_MODEL_NAME",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
 def test_settings_default_to_fake(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MINI_AGENT_PROVIDER", raising=False)
     assert AgentSettings.from_env().provider == "fake"
@@ -24,3 +37,12 @@ def test_settings_reject_unknown_provider() -> None:
     with pytest.raises(ConfigurationError, match="provider"):
         AgentSettings(provider="unknown")
 
+
+def test_real_provider_rejects_blank_api_key() -> None:
+    with pytest.raises(ConfigurationError, match="OPENAI_API_KEY"):
+        create_client(AgentSettings(provider="openai", api_key="   "))
+
+
+def test_settings_reject_blank_model() -> None:
+    with pytest.raises(ConfigurationError, match="model"):
+        AgentSettings(model="   ")

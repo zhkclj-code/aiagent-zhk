@@ -4,7 +4,7 @@ import pytest
 
 from mini_agent.client import FakeLLMClient, OpenAICompatibleClient
 from mini_agent.errors import LLMClientError
-from mini_agent.models import Message
+from mini_agent.models import Message, ToolCall
 
 
 async def test_fake_client_requests_calculator_for_calculation_prompt() -> None:
@@ -48,6 +48,55 @@ async def test_openai_adapter_maps_tool_calls() -> None:
     assert reply.tool_calls[0].arguments == {"expression": "2+2"}
 
 
+async def test_openai_adapter_serializes_complete_tool_conversation() -> None:
+    response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="完成", tool_calls=[]))]
+    )
+    completions = _RecordingCompletions(response)
+    client = OpenAICompatibleClient(
+        raw_client=SimpleNamespace(chat=SimpleNamespace(completions=completions)),
+        model="demo",
+    )
+    messages = [
+        Message(role="user", content="计算 2+2"),
+        Message(
+            role="assistant",
+            content=None,
+            tool_calls=[
+                ToolCall(id="call-1", name="calculator", arguments={"expression": "2+2"})
+            ],
+        ),
+        Message(role="tool", content="4", name="calculator", tool_call_id="call-1"),
+    ]
+    tools = [{"type": "function", "function": {"name": "calculator"}}]
+
+    await client.complete(messages, tools)
+
+    assert completions.request == {
+        "model": "demo",
+        "messages": [
+            {"role": "user", "content": "计算 2+2"},
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "call-1",
+                        "type": "function",
+                        "function": {
+                            "name": "calculator",
+                            "arguments": '{"expression": "2+2"}',
+                        },
+                    }
+                ],
+            },
+            {"role": "tool", "content": "4", "tool_call_id": "call-1"},
+        ],
+        "tools": tools,
+        "tool_choice": "auto",
+    }
+
+
 async def test_openai_adapter_normalizes_provider_errors() -> None:
     class BrokenCompletions:
         async def create(self, **kwargs: object) -> object:
@@ -66,3 +115,13 @@ class _AsyncResult:
 
     async def __call__(self, **kwargs: object) -> object:
         return self._value
+
+
+class _RecordingCompletions:
+    def __init__(self, response: object) -> None:
+        self._response = response
+        self.request: dict[str, object] | None = None
+
+    async def create(self, **kwargs: object) -> object:
+        self.request = kwargs
+        return self._response

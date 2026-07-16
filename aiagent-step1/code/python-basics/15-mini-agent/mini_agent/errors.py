@@ -19,4 +19,3 @@ class ToolError(MiniAgentError):
 
 class AgentLoopError(MiniAgentError):
     """Raised when the Agent exceeds its tool-call round limit."""
-

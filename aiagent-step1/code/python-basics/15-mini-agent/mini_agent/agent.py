@@ -36,6 +36,11 @@ class MiniAgent:
 
         while True:
             reply = await self._client.complete(self.history, self._tools.schemas())
+            if reply.tool_calls and tool_rounds >= self._max_tool_rounds:
+                raise AgentLoopError(
+                    f"工具调用超过 {self._max_tool_rounds} 轮上限"
+                )
+
             self._history.append(
                 Message(
                     role="assistant",
@@ -49,11 +54,6 @@ class MiniAgent:
                     content=reply.content or "",
                     messages=self.history,
                     tool_rounds=tool_rounds,
-                )
-
-            if tool_rounds >= self._max_tool_rounds:
-                raise AgentLoopError(
-                    f"工具调用超过 {self._max_tool_rounds} 轮上限"
                 )
 
             for call in reply.tool_calls:

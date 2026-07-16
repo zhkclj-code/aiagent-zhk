@@ -59,4 +59,3 @@ python_version = "3.11"
 strict = true
 packages = ["mini_agent"]
 mypy_path = "code/python-basics/15-mini-agent"
-
