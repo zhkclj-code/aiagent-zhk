@@ -2,156 +2,94 @@
 
 ## Python 环境
 
-### 1. 安装 Python（推荐 3.10+）
+要求 Python 3.11 或更高版本：
 
-**检查现有版本**：
 ```bash
 python3 --version
+cd aiagent-step1
+python3.11 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
 ```
 
-**如需升级**（macOS）：
-```bash
-brew install python@3.10
-```
-
-### 2. 创建虚拟环境
-
-```bash
-cd /Users/admin/IdeaProjects/python-pros/aiagent-step1
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. 安装依赖
+`pyproject.toml` 是依赖和工具配置的权威来源。`requirements.txt` 只保留为兼容入口，
+以下命令效果等价：
 
 ```bash
-pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt
 ```
 
-### 4. 验证安装
+基础阶段只安装 OpenAI SDK、Pydantic、python-dotenv 和测试工具。后续阶段按需安装：
 
 ```bash
-python -c "import langchain; print(langchain.__version__)"
-python -c "import openai; print(openai.__version__)"
+.venv/bin/pip install -e ".[agent-frameworks]"
+.venv/bin/pip install -e ".[data]"
 ```
-
----
-
-## API Key 配置
-
-### 创建环境变量文件
-
-```bash
-touch .env
-```
-
-### 配置 API Keys
-
-在 `.env` 文件中添加：
-```bash
-# OpenAI API（必需）
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_API_BASE=https://api.openai.com/v1
-
-# Anthropic Claude API（可选）
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-
-# 其他配置
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=your_langsmith_api_key_here
-```
-
-**获取方式**：
-- [OpenAI API Key](https://platform.openai.com/api-keys)
-- [Anthropic API Key](https://console.anthropic.com/)
-- [LangSmith API Key](https://smith.langchain.com/)（可选，用于调试追踪）
-
----
-
-## VS Code 插件安装
-
-### 核心插件（必装）
-
-在 VS Code 中按 `Cmd + Shift + P`，输入以下命令逐个安装：
-
-```
-ext install ms-python.python
-ext install ms-python.debugpy
-ext install ms-toolsai.jupyter
-ext install redhat.vscode-yaml
-ext install eamodio.gitlens
-```
-
-### 推荐配置
-
-已自动生成 `.vscode/settings.json`，配置包括：
-- Python 解释器路径
-- Black 代码格式化
-- Jupyter Notebook 支持
-- 自动导入整理
-
----
 
 ## 验证环境
 
-### 测试 Python 环境
+```bash
+.venv/bin/python --version
+.venv/bin/pytest
+.venv/bin/ruff --version
+.venv/bin/mypy --version
+```
+
+## Mini Agent 运行模式
+
+默认 Fake 模式无需 `.env`、API Key 或网络：
 
 ```bash
-python --version  # 应显示 3.10+
-pip list | grep langchain  # 应显示已安装版本
+.venv/bin/python -m mini_agent "计算 2 + 2"
 ```
 
-### 测试 API 连接
+需要连接 OpenAI 兼容服务时，在项目根目录的 `.env` 中配置：
 
-创建测试文件 `code/01-hello-llm/test_connection.py`：
-
-```python
-import os
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": "Hello, AI Agent learning!"}]
-)
-
-print(response.choices[0].message.content)
-```
-
-运行测试：
 ```bash
-python code/01-hello-llm/test_connection.py
+MINI_AGENT_PROVIDER=openai
+OPENAI_API_KEY=replace_with_your_key
+OPENAI_API_BASE=https://api.openai.com/v1
+OPENAI_MODEL_NAME=replace_with_available_model
+MINI_AGENT_MAX_TOOL_ROUNDS=3
 ```
 
----
+`.env` 必须在 `.gitignore` 中，不得提交真实密钥。普通 `.venv/bin/pytest` 会排除
+integration 测试，因此不会调用真实服务。
+
+显式运行真实 API 测试：
+
+```bash
+.venv/bin/pytest -o addopts="" -m integration tests/mini_agent/test_integration.py
+```
+
+## 常用命令
+
+```bash
+# 运行课程讲解
+.venv/bin/python code/python-basics/07-async/lesson.py
+
+# 运行全部离线测试
+.venv/bin/pytest
+
+# 查看 Mini Agent 覆盖率
+.venv/bin/pytest --cov=mini_agent --cov-report=term-missing
+
+# 检查新项目代码质量
+.venv/bin/ruff check code/python-basics/15-mini-agent/mini_agent tests
+.venv/bin/mypy code/python-basics/15-mini-agent/mini_agent
+```
 
 ## 常见问题
 
-### Q: 虚拟环境激活失败
-**解决**：
-```bash
-chmod +x .venv/bin/activate
-source .venv/bin/activate
-```
+### pytest 没有发现测试
 
-### Q: pip 安装速度慢
-**解决**：使用国内镜像
-```bash
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-```
+确认当前目录是 `aiagent-step1`，测试文件放在 `tests/`，名称以 `test_` 开头。
 
-### Q: API Key 报错
-**解决**：检查 `.env` 文件是否在项目根目录，确保变量名正确
+### `EmailStr` 提示缺少 email-validator
 
----
+重新执行 `.venv/bin/pip install -e ".[dev]"`。项目依赖使用
+`pydantic[email]` 声明了该扩展。
 
-## 下一步
+### 真实客户端提示缺少 API Key
 
-环境配置完成后，开始：
-1. 阅读 [learning-path.md](learning-path.md)
-2. 创建第一个 LLM 调用实验（`code/01-hello-llm/`）
-3. 学习笔记记录到 `notes/01-基础准备/`
+确认 `.env` 位于 `aiagent-step1` 根目录，变量名为 `OPENAI_API_KEY`。只学习离线
+流程时不要选择 `openai` provider。

@@ -94,7 +94,7 @@
 - [ ] Prompt 模板库结构化、可复用
 - [ ] 理解 Prompt 注入风险，有防护意识
 
-**代码目录**：`code/02-prompt-engineering/`
+**规划代码目录（尚未创建）**：`code/02-prompt-engineering/`
 
 ### 学习资源
 
@@ -178,7 +178,7 @@
 - [ ] ReAct 循环可视化，执行过程清晰
 - [ ] 工具错误自动重试，成功率 >80%
 
-**代码目录**：`code/03-simple-agent/smart-assistant/`
+**规划代码目录（尚未创建）**：`code/03-simple-agent/smart-assistant/`
 
 #### 项目 2：Planning Agent
 
@@ -203,7 +203,7 @@
 - [ ] 执行失败能自动调整计划
 - [ ] 进度可视化，状态清晰
 
-**代码目录**：`code/03-simple-agent/planning-agent/`
+**规划代码目录（尚未创建）**：`code/03-simple-agent/planning-agent/`
 
 ### 学习资源
 
@@ -338,7 +338,7 @@
 - [ ] 并发处理能力提升 >50%
 - [ ] 成本优化策略清晰，效果可量化
 
-**代码目录**：`code/03-simple-agent/agent-optimization/`
+**规划代码目录（尚未创建）**：`code/03-simple-agent/agent-optimization/`
 
 ### 学习资源
 
@@ -603,7 +603,7 @@
 - [ ] 部署成功，服务稳定运行
 - [ ] 技术复盘深刻，能力提升明显
 
-**代码目录**：`projects/final-project/`
+**规划代码目录（尚未创建）**：`projects/final-project/`
 
 ### 学习资源
 
