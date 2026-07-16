@@ -11,6 +11,21 @@ Day 4 练习：装饰器和上下文管理器
 # ================================
 
 # TODO: 创建装饰器 uppercase_decorator，将函数返回值转为大写
+def uppercase_decorator(func):
+    def warpper(*args, **keywords):
+        rst = func(*args, **keywords)
+        if isinstance(rst, str):
+            return rst.upper()
+        else:
+            return rst
+    return warpper
+
+@uppercase_decorator
+def test_0() -> str:
+    return 'hello'
+
+rst = test_0()
+print(f'rst = {rst}')
 
 
 # TODO: 创建函数 get_message()，使用装饰器
