@@ -1,162 +1,144 @@
-# Python Basics Foundation Design
+# Python 基础课程完善设计
 
-## Goal
+## 目标
 
-Turn `aiagent-step1/code/python-basics` into a consistent, runnable Python
-foundation course for a Java developer preparing for AI Agent development.
-Repair the known syntax and runtime failures, establish a real automated test
-system, normalize course names and references, and add an offline-first Mini
-Agent capstone with an optional OpenAI-compatible client.
+将 `aiagent-step1/code/python-basics` 完善为一套结构一致、可以运行、适合
+Java 开发者转向 AI Agent 开发的 Python 基础课程。修复已知语法和运行错误，
+建立真正可用的自动化测试体系，统一课程文件名与文档引用，并新增一个默认离线
+运行、可选接入 OpenAI 兼容接口的 Mini Agent 综合项目。
 
-## Scope
+## 范围
 
-This change covers the Python foundation course and its direct documentation.
-It does not implement LangChain, LangGraph, RAG, vector databases, or a
-production deployment platform. Those remain later learning stages.
+本次改动覆盖 Python 基础课程及其直接相关文档，不实现 LangChain、LangGraph、
+RAG、向量数据库或生产部署平台。这些内容保留在后续学习阶段。
 
-## Course Structure
+## 课程结构
 
-The course uses module numbers rather than inconsistent day numbers. Existing
-module directories remain numbered `01` through `14`; a new capstone becomes
-module `15`.
+课程统一使用“模块编号”，不再混用不一致的 Day 编号。保留现有 `01` 至 `14`
+模块目录，新增模块 `15` 作为综合项目。
 
-Every existing module uses the same filenames:
+每个现有模块使用相同的文件名：
 
-- `lesson.py`: runnable reference material and examples
-- `exercises.py`: learner exercises, which must at least parse successfully
+- `lesson.py`：可以直接运行的讲解和参考示例
+- `exercises.py`：供学习者完成的练习，未完成时也必须能够通过语法解析
 
-The old topic-specific lesson filenames and `practice_day*.py` filenames are
-renamed. Documentation references only paths that exist after the rename.
+现有的主题式讲解文件名和 `practice_day*.py` 统一重命名。所有文档只引用重命名
+后真实存在的路径。
 
-The course index records these modules:
+课程索引包含以下模块：
 
-1. Syntax and Java comparison
-2. Pythonic language features
-3. Object-oriented Python
-4. Decorators and context managers
-5. Exceptions and files
-6. Modules and packages
-7. Async fundamentals
-8. Async patterns and practice
-9. Type hints and Pydantic
-10. Testing with pytest
-11. Comprehensive Python project
-12. Logging
+1. 基础语法与 Java 对比
+2. Pythonic 语法特性
+3. Python 面向对象
+4. 装饰器与上下文管理器
+5. 异常处理与文件操作
+6. 模块与包
+7. 异步编程基础
+8. 异步编程模式与实践
+9. 类型注解与 Pydantic
+10. 使用 pytest 测试
+11. Python 综合练习
+12. 日志
 13. Dataclasses
-14. Generators, regular expressions, and pathlib
-15. Mini Agent capstone
+14. 生成器、正则表达式与 pathlib
+15. Mini Agent 综合项目
 
-## Existing Runtime Repairs
+## 现有运行问题修复
 
-The implementation repairs the reproduced failures at their causes:
+按照已经复现的根因修复以下问题：
 
-- `01-syntax/lesson.py` creates or supplies its own demonstration input rather
-  than assuming `test.txt` exists in the caller's working directory.
-- `06-modules/lesson.py` uses `sys.executable` for child Python processes.
-- `09-type-hints/lesson.py` uses current Pydantic v2 configuration and declares
-  the email validation dependency used by `EmailStr`.
-- `10-testing/lesson.py` imports `sys` and patches the module that actually owns
-  the target function.
-- `11-project/exercises.py` uses valid string boundaries and parses normally.
-- Network examples are opt-in so normal lesson runs are deterministic and do
-  not depend on internet access.
+- `01-syntax/lesson.py` 自己创建或提供演示输入，不再假设调用者工作目录中存在
+  `test.txt`。
+- `06-modules/lesson.py` 使用 `sys.executable` 启动子 Python 进程。
+- `09-type-hints/lesson.py` 使用当前 Pydantic v2 配置方式，并声明 `EmailStr`
+  所需的邮箱验证依赖。
+- `10-testing/lesson.py` 导入 `sys`，并 patch 真正定义目标函数的模块。
+- `11-project/exercises.py` 修复字符串边界，确保文件能够正常解析。
+- 网络示例改为显式开启，普通课程运行不依赖互联网，结果保持稳定。
 
-## Mini Agent Architecture
+## Mini Agent 架构
 
-The capstone is a small package under
-`code/python-basics/15-mini-agent/mini_agent/`. Each module has one purpose:
+综合项目放在 `code/python-basics/15-mini-agent/mini_agent/`，按职责拆分：
 
-- `models.py`: messages, tool calls, tool results, and agent response models
-- `errors.py`: configuration, client, tool, and loop-limit exceptions
-- `client.py`: `LLMClient` protocol, deterministic `FakeLLMClient`, and
-  OpenAI-compatible async adapter
-- `tools.py`: tool protocol, registry, safe calculator, and current-time tool
-- `agent.py`: bounded Agent execution loop and conversation history
-- `config.py`: environment-backed configuration and client selection
-- `cli.py`: async command-line entry point
+- `models.py`：消息、工具调用、工具结果和 Agent 响应模型
+- `errors.py`：配置、客户端、工具和循环上限异常
+- `client.py`：`LLMClient` 协议、确定性的 `FakeLLMClient` 以及 OpenAI
+  兼容异步适配器
+- `tools.py`：工具协议、工具注册表、安全计算器和当前时间工具
+- `agent.py`：有轮次上限的 Agent 执行循环与对话历史
+- `config.py`：环境变量配置与客户端选择
+- `cli.py`：异步命令行入口
 
-The core flow is:
+核心执行流程如下：
 
-1. The CLI loads configuration and creates a Fake or OpenAI client.
-2. `MiniAgent` sends the conversation and available tool schemas to the client.
-3. A normal model message ends the turn.
-4. A tool call is validated and executed by `ToolRegistry`.
-5. The tool result is appended to the conversation and sent back to the model.
-6. The loop stops after at most three tool rounds.
+1. CLI 加载配置并创建 Fake 或 OpenAI 客户端。
+2. `MiniAgent` 将对话消息和可用工具 Schema 发送给客户端。
+3. 模型返回普通消息时结束当前对话轮次。
+4. 模型返回工具调用时，由 `ToolRegistry` 校验并执行。
+5. 工具结果加入对话历史，再次发送给模型。
+6. 工具调用最多执行三轮，超过上限后停止。
 
-The Fake client is the default and follows deterministic scripted responses.
-Setting the documented environment variables enables the real client without
-changing application code.
+默认使用 Fake 客户端，并通过预设响应保证结果确定。配置文档中的环境变量后可
+切换为真实客户端，应用代码不需要改变。
 
-## Error Handling
+## 错误处理
 
-- Selecting the real client without an API key raises a clear
-  `ConfigurationError` before any request is made.
-- Provider failures are normalized as `LLMClientError` while preserving the
-  original exception as the cause.
-- Unknown tools and invalid tool arguments become structured tool-error results
-  that the model can observe; they do not terminate the process.
-- Unsafe or unsupported calculator expressions are rejected without `eval`.
-- More than the configured tool-call rounds raises `AgentLoopError`.
-- CLI failures produce a concise message and a non-zero exit status.
+- 选择真实客户端但未配置 API Key 时，在发送请求前抛出清晰的
+  `ConfigurationError`。
+- 模型服务异常统一转换为 `LLMClientError`，同时保留原始异常作为 cause。
+- 未知工具和错误参数转换为结构化工具错误结果，交给模型继续处理，不直接终止
+  进程。
+- 计算器不使用 `eval`，拒绝不安全或不支持的表达式。
+- 超过允许的工具调用轮数时抛出 `AgentLoopError`。
+- CLI 遇到错误时输出简洁信息，并以非零状态码退出。
 
-## Test System
+## 测试体系
 
-`pytest` is the single test entry point. `pyproject.toml` defines discovery,
-markers, asyncio behavior, and development dependencies.
+统一使用 `pytest` 作为测试入口。`pyproject.toml` 负责配置测试发现规则、marker、
+异步模式和开发依赖。
 
-The suite contains:
+测试套件包含：
 
-- course structure tests that verify normalized names and documentation paths
-- AST parsing tests for all `lesson.py` and `exercises.py` files
-- subprocess smoke tests that run every lesson in an isolated temporary working
-  directory with network examples disabled
-- focused regression tests for each reproduced runtime failure
-- unit tests for models, tools, registry, configuration, and Agent behavior
-- async tests for normal replies, successful tool use, tool errors, provider
-  errors, and the loop limit
-- an `integration` marker for optional real API tests, excluded by default
+- 课程结构测试：检查统一后的文件名和文档路径
+- AST 解析测试：检查所有 `lesson.py` 和 `exercises.py`
+- 隔离运行测试：在临时工作目录中运行每个课程文件，默认关闭网络示例
+- 回归测试：覆盖已经复现的每一个语法和运行错误
+- 单元测试：覆盖数据模型、工具、工具注册表、配置和 Agent 行为
+- 异步测试：覆盖普通回答、成功工具调用、工具错误、模型服务错误和循环上限
+- 可选真实 API 测试：标记为 `integration`，默认不执行
 
-`pytest-asyncio` is required because Agent and client behavior is asynchronous.
-`pytest-cov` is available for coverage reporting, but coverage percentage is a
-diagnostic rather than a substitute for behavioral assertions.
+`pytest-asyncio` 是必需依赖，因为 Agent 和客户端采用异步实现。`pytest-cov`
+用于生成覆盖率报告，但覆盖率百分比只作为排查遗漏的指标，不能代替行为断言。
 
-## Dependencies And Tooling
+## 依赖与工具
 
-`aiagent-step1/pyproject.toml` becomes the authoritative foundation-project
-configuration. Runtime dependencies remain minimal: OpenAI SDK, Pydantic with
-email support, and python-dotenv. Test and quality tools are development extras:
-pytest, pytest-asyncio, pytest-cov, Ruff, and mypy.
+`aiagent-step1/pyproject.toml` 作为基础学习项目的权威配置。运行时只保留必要依赖：
+OpenAI SDK、带邮箱验证能力的 Pydantic 和 python-dotenv。
 
-Agent frameworks and data-platform dependencies are optional extras for later
-stages. Existing setup documentation is updated to use the new installation and
-test commands.
+测试与代码质量工具作为开发依赖：pytest、pytest-asyncio、pytest-cov、Ruff 和
+mypy。Agent 框架及数据平台相关依赖改为后续阶段使用的可选依赖。安装说明同步
+更新为新的依赖安装和测试命令。
 
-## Documentation Normalization
+## 文档规范化
 
-The following documentation is reconciled with the filesystem:
+以下文档内容与实际文件系统保持一致：
 
-- root README directory tree and current progress
-- Python learning path and module numbering
-- exercise file checklist
-- setup guide and test commands
-- references to lesson and exercise filenames
+- 项目 README 中的目录树和当前进度
+- Python 学习路径和模块编号
+- 练习文件清单
+- 环境配置与测试命令
+- 所有课程讲解和练习文件引用
 
-Statements claiming Python has no interfaces, no generics, or that asyncio is
-the equivalent of all Java multithreading are corrected. The comparison instead
-distinguishes structural protocols, typed generics, threads, processes, and
-async I/O concurrency.
+修正“Python 没有接口”“Python 没有泛型”“asyncio 等同于 Java 多线程”等错误
+表述。新的对比会区分结构化协议、类型泛型、线程、进程和异步 I/O 并发。
 
-## Acceptance Criteria
+## 验收标准
 
-- Every Python file parses under Python 3.11.
-- All fourteen existing lesson scripts run successfully from isolated working
-  directories without network access.
-- `pytest` discovers tests with a normal command and exits successfully.
-- No documentation link or referenced course file is missing.
-- Fake Mini Agent runs without credentials and demonstrates at least one tool
-  call.
-- Real-client configuration is optional and validated before use.
-- Agent tests make no network calls and consume no API quota.
-- The Git worktree contains no generated logs, caches, or lesson output files
-  after verification.
+- 所有 Python 文件都能在 Python 3.11 下通过语法解析。
+- 现有 14 个课程讲解文件都能在隔离工作目录、无网络环境中成功运行。
+- 执行普通 `pytest` 命令可以发现测试并成功退出。
+- 文档中引用的课程文件和链接都真实存在。
+- Fake Mini Agent 无需密钥即可运行，并至少演示一次工具调用。
+- 真实客户端为可选配置，发送请求前会校验配置完整性。
+- Agent 自动化测试不访问网络、不消耗 API 额度。
+- 验证完成后，Git 工作区中不残留生成的日志、缓存或课程输出文件。
