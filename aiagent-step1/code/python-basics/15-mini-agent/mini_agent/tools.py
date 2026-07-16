@@ -15,7 +15,7 @@ class Tool(Protocol):
 
     name: str
     description: str
-    parameters_schema: dict[str, Any]
+    parameters_schema: ClassVar[dict[str, Any]]
 
     def run(self, arguments: dict[str, Any]) -> str:
         """Execute the tool with validated provider arguments."""
@@ -77,20 +77,20 @@ class CalculatorTool:
             return float(node.value)
 
         if isinstance(node, ast.UnaryOp):
-            operation = self._unary_operators.get(type(node.op))
-            if operation is None:
+            unary_operation = self._unary_operators.get(type(node.op))
+            if unary_operation is None:
                 raise ToolError("不支持该一元运算符")
-            return operation(self._evaluate(node.operand))
+            return unary_operation(self._evaluate(node.operand))
 
         if isinstance(node, ast.BinOp):
-            operation = self._binary_operators.get(type(node.op))
-            if operation is None:
+            binary_operation = self._binary_operators.get(type(node.op))
+            if binary_operation is None:
                 raise ToolError("不支持该二元运算符")
             left = self._evaluate(node.left)
             right = self._evaluate(node.right)
             if isinstance(node.op, ast.Pow) and abs(right) > 10:
                 raise ToolError("指数绝对值不能超过 10")
-            return operation(left, right)
+            return binary_operation(left, right)
 
         raise ToolError("表达式包含不安全或不支持的语法")
 

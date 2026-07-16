@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 from .test_course_structure import COURSE_ROOT, MODULES
 

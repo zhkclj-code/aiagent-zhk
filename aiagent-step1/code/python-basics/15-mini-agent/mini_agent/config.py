@@ -36,7 +36,7 @@ class AgentSettings:
                 "MINI_AGENT_MAX_TOOL_ROUNDS 必须是整数"
             ) from error
 
-        provider = provider_override or os.getenv("MINI_AGENT_PROVIDER", "fake")
+        provider = provider_override or os.getenv("MINI_AGENT_PROVIDER") or "fake"
         return cls(
             provider=provider.strip().lower(),
             api_key=os.getenv("OPENAI_API_KEY") or None,
@@ -58,4 +58,3 @@ def create_client(settings: AgentSettings) -> LLMClient:
         base_url=settings.base_url,
         model=settings.model,
     )
-
