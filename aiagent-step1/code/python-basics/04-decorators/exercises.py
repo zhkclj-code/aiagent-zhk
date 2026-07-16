@@ -4,7 +4,7 @@ Day 4 练习：装饰器和上下文管理器
 说明：本文件只有练习题，没有答案。
       请参考 decorators.py 查看示例和答案。
 """
-
+import time
 
 # ================================
 # 练习 1：创建简单装饰器
@@ -41,7 +41,7 @@ print(f'{get_message()}')
 # ================================
 # 练习 2：计时装饰器
 # ================================
-import time
+
 # TODO: 创建装饰器 measure_time，测量函数执行时间
 def measure_time(func):
     def warpper(*args, **kwargs):
