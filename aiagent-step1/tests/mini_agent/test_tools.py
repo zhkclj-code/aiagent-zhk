@@ -16,7 +16,10 @@ def test_calculator_rejects_unexpected_arguments() -> None:
         CalculatorTool().run({"expression": "2 + 2", "unexpected": True})
 
 
-@pytest.mark.parametrize("expression", ["__import__('os')", "2 ** 100", "name + 1"])
+@pytest.mark.parametrize(
+    "expression",
+    ["__import__('os')", "2 ** 100", "name + 1", "(-1) ** 0.5"],
+)
 def test_calculator_rejects_unsafe_expressions(expression: str) -> None:
     with pytest.raises(ToolError):
         CalculatorTool().run({"expression": expression})

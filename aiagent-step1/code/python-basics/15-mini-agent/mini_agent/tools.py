@@ -92,8 +92,11 @@ class CalculatorTool:
                 raise ToolError("不支持该二元运算符")
             left = self._evaluate(node.left)
             right = self._evaluate(node.right)
-            if isinstance(node.op, ast.Pow) and abs(right) > 10:
-                raise ToolError("指数绝对值不能超过 10")
+            if isinstance(node.op, ast.Pow):
+                if abs(right) > 10:
+                    raise ToolError("指数绝对值不能超过 10")
+                if left < 0 and not right.is_integer():
+                    raise ToolError("不支持产生复数的幂运算")
             return binary_operation(left, right)
 
         raise ToolError("表达式包含不安全或不支持的语法")
