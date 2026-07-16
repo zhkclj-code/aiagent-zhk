@@ -164,6 +164,8 @@ JUnit（结构化规范）：
 # 创建测试文件：test_*.py 或 *_test.py
 # 运行测试：pytest test_example.py
 
+import sys
+
 import pytest
 
 
@@ -413,8 +415,8 @@ def test_with_mock():
     mock_api.get_user_name.assert_called_once_with(1)
 
 
-@patch('__main__.get_user_name')
-def test_with_patch(mock_get_user):
+@patch.object(sys.modules[__name__], "get_user_name")
+def test_with_patch(mock_get_user: MagicMock) -> None:
     """使用 Patch 测试"""
     # 设置 Mock 返回值
     mock_get_user.return_value = "Patched User"

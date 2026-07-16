@@ -392,26 +392,27 @@ process_items([1, 2, 3])
 # 10. Pydantic 数据验证
 # ================================
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import List
 
 class UserPydantic(BaseModel):
     """使用 Pydantic 的用户模型"""
-    
-    name: str = Field(..., min_length=1, max_length=50)
-    age: int = Field(..., ge=0, le=150)
-    email: EmailStr
-    tags: List[str] = Field(default_factory=list)
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "张三",
                 "age": 25,
                 "email": "zhangsan@example.com",
-                "tags": ["Python", "AI"]
+                "tags": ["Python", "AI"],
             }
         }
+    )
+
+    name: str = Field(..., min_length=1, max_length=50)
+    age: int = Field(..., ge=0, le=150)
+    email: EmailStr
+    tags: List[str] = Field(default_factory=list)
 
 
 # 创建用户（自动验证）

@@ -272,9 +272,15 @@ finally:
 # }
 
 # Python 写法（with 语句自动管理资源）：
-with open("test.txt", "r", encoding="utf-8") as f:
-    content = f.read()
-    print(content)
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory() as temp_dir:
+    sample_file = Path(temp_dir) / "test.txt"
+    sample_file.write_text("Python 文件操作示例", encoding="utf-8")
+    with sample_file.open("r", encoding="utf-8") as f:
+        content = f.read()
+        print(content)
 
 
 # ================================

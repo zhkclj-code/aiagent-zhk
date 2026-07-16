@@ -24,13 +24,13 @@ Day 12: 综合项目 - Mini Agent
 任务：使用 Pydantic 定义数据模型：
 
 class Question(BaseModel):
-    """用户问题"""
+    '''用户问题'''
     id: int
     content: str
     context: Optional[str] = None
 
 class Answer(BaseModel):
-    """Agent 回答"""
+    '''Agent 回答'''
     question_id: int
     content: str
     model: str
@@ -38,7 +38,7 @@ class Answer(BaseModel):
     timestamp: str
 
 class AgentConfig(BaseModel):
-    """Agent 配置"""
+    '''Agent 配置'''
     model: str = "glm-5.2"
     temperature: float = 0.7
     max_tokens: int = 500
@@ -58,7 +58,7 @@ class AgentConfig(BaseModel):
 任务：实现异步 LLM API 客户端：
 
 class AsyncLLMClient:
-    """异步 LLM 客户端"""
+    '''异步 LLM 客户端'''
     
     def __init__(self, config: AgentConfig):
         self.config = config
@@ -68,12 +68,12 @@ class AsyncLLMClient:
         )
     
     async def chat(self, prompt: str) -> Answer:
-        """调用 LLM API"""
+        '''调用 LLM API'''
         # 实现异步调用
         pass
     
     async def batch_chat(self, prompts: List[str]) -> List[Answer]:
-        """并发调用多个请求"""
+        '''并发调用多个请求'''
         # 使用 asyncio.gather
         pass
 """
@@ -91,14 +91,14 @@ class AsyncLLMClient:
 任务：实现 Agent 核心逻辑：
 
 class SimpleAgent:
-    """简单问答 Agent"""
+    '''简单问答 Agent'''
     
     def __init__(self, config: AgentConfig):
         self.client = AsyncLLMClient(config)
         self.history: List[Dict] = []
     
     async def answer(self, question: Question) -> Answer:
-        """回答问题"""
+        '''回答问题'''
         # 1. 检查历史记录
         # 2. 构建 prompt（包含上下文）
         # 3. 调用 LLM
@@ -107,16 +107,16 @@ class SimpleAgent:
         pass
     
     async def batch_answer(self, questions: List[Question]) -> List[Answer]:
-        """批量回答问题"""
+        '''批量回答问题'''
         # 使用 asyncio.gather 并发处理
         pass
     
     def get_history(self) -> List[Dict]:
-        """获取对话历史"""
+        '''获取对话历史'''
         return self.history
     
     def clear_history(self) -> None:
-        """清空对话历史"""
+        '''清空对话历史'''
         self.history.clear()
 """
 
@@ -133,15 +133,15 @@ class SimpleAgent:
 任务：为 Agent 添加错误处理：
 
 class AgentError(Exception):
-    """Agent 错误"""
+    '''Agent 错误'''
     pass
 
 class APIError(AgentError):
-    """API 调用错误"""
+    '''API 调用错误'''
     pass
 
 class RateLimitError(APIError):
-    """速率限制错误"""
+    '''速率限制错误'''
     pass
 
 增强 SimpleAgent：
@@ -151,7 +151,7 @@ async def answer_with_retry(
     max_retries: int = 3,
     delay: float = 1.0
 ) -> Answer:
-    """带重试的回答"""
+    '''带重试的回答'''
     for attempt in range(max_retries):
         try:
             return await self.answer(question)
@@ -175,26 +175,26 @@ async def answer_with_retry(
 任务：实现对话历史管理：
 
 class ConversationManager:
-    """对话管理器"""
+    '''对话管理器'''
     
     def __init__(self, max_history: int = 10):
         self.history: List[Dict] = []
         self.max_history = max_history
     
     def add_message(self, role: str, content: str) -> None:
-        """添加消息到历史"""
+        '''添加消息到历史'''
         self.history.append({"role": role, "content": content})
         # 如果超过最大历史数，删除旧消息
         if len(self.history) > self.max_history:
             self.history = self.history[-self.max_history:]
     
     def get_context(self) -> str:
-        """获取上下文（历史对话）"""
+        '''获取上下文（历史对话）'''
         # 将历史记录格式化为字符串
         pass
     
     def summarize(self) -> str:
-        """总结对话内容"""
+        '''总结对话内容'''
         # 使用 LLM 总结对话
         pass
 

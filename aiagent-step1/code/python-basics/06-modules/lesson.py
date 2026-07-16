@@ -431,11 +431,13 @@ else:
 # 作为脚本运行
 print("\n模块执行测试:")
 import subprocess
+import sys
 result = subprocess.run(
-    ["python", "executable.py"],
+    [sys.executable, "executable.py"],
     capture_output=True,
     text=True,
-    cwd=temp_dir
+    cwd=temp_dir,
+    check=False,
 )
 print(f"脚本输出: {result.stdout.strip()}")
 

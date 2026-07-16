@@ -460,13 +460,19 @@ async def async_http_request():
         print(f"HTTP 请求失败: {e}")
 
 
-# 如果安装了 aiohttp，运行测试
-try:
-    import aiohttp
-    asyncio.run(async_http_request())
-except ImportError:
-    print("\n未安装 aiohttp，跳过 HTTP 请求示例")
-    print("安装命令: pip install aiohttp")
+# 网络示例需要显式开启，避免课程运行依赖外部网络。
+import os
+
+if os.getenv("RUN_NETWORK_EXAMPLES") == "1":
+    try:
+        import aiohttp
+    except ImportError:
+        print("\n未安装 aiohttp，跳过 HTTP 请求示例")
+        print("安装命令: pip install aiohttp")
+    else:
+        asyncio.run(async_http_request())
+else:
+    print("\n网络示例默认关闭；设置 RUN_NETWORK_EXAMPLES=1 后运行")
 
 
 # ================================
