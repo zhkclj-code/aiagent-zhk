@@ -11,6 +11,207 @@ import json
 
 
 # ================================
+# 0. dataclass核心概念 - Java开发者必读
+# ================================
+
+"""
+【什么是dataclass】
+dataclass是Python 3.7+引入的装饰器，用于自动生成类的常用方法。
+核心价值：减少样板代码，提高代码可读性。
+
+【dataclass vs Java Lombok对比】
+
+| 特性 | Python @dataclass | Java Lombok @Data |
+|-----|-------------------|-------------------|
+| 生成方法 | __init__, __repr__, __eq__ | getter, setter, equals, hashCode, toString |
+| 生成时机 | 运行时（类定义时） | 编译时（字节码增强） |
+| IDE支持 | 原生支持（Python 3.7+） | 需要插件（Lombok Plugin） |
+| 依赖 | 标准库 | 第三方库 |
+| 不可变 | frozen=True | @Value（final字段） |
+| 构建器 | 无内置 | @Builder |
+| 验证 | __post_init__ | @Validated + JSR-303 |
+| 性能 | 无额外开销 | 编译优化 |
+
+【和Java POJO的详细对比】
+
+Java POJO（Plain Old Java Object）：
+public class User {
+    private String name;
+    private int age;
+
+    // 手写getter/setter
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    // 手写equals/hashCode
+    @Override
+    public boolean equals(Object o) { ... }
+
+    // 手写toString
+    @Override
+    public String toString() { ... }
+}
+
+Python @dataclass：
+@dataclass
+class User:
+    name: str
+    age: int
+    # 自动生成__init__, __repr__, __eq__
+
+【核心差异】
+
+1. 生成时机：
+   - Python: 运行时（类定义时立即生成）
+   - Java Lombok: 编译时（需要编译器插件）
+   - Java POJO: 手写（无自动生成）
+
+2. 使用方式：
+   Python:
+   user = User("张三", 25)  # 直接访问属性
+   user.name = "李四"
+
+   Java:
+   User user = new User();
+   user.setName("张三");  // 通过setter访问
+   user.setAge(25);
+
+3. 不可变性：
+   Python:
+   @dataclass(frozen=True)
+   class ImmutableUser:
+       name: str
+   # user.name = "新名字"  # 报错！
+
+   Java:
+   @Value  // Lombok
+   public class ImmutableUser {
+       String name;
+   }
+
+【dataclass的优势】
+
+1. 简洁性：
+   - 3行代码 vs Java POJO的30+行
+   - 无需手写getter/setter/equals/hashCode
+
+2. 类型安全：
+   - 结合类型注解，IDE智能提示
+   - 可选的运行时验证（配合Pydantic）
+
+3. 标准库：
+   - 无需第三方依赖
+   - Python 3.7+原生支持
+
+4. 不可变支持：
+   - frozen=True实现不可变对象
+   - 线程安全、函数式编程友好
+
+【Java Lombok的优势】
+
+1. 构建器模式：
+   @Builder
+   public class User {
+       String name;
+       int age;
+   }
+   User user = User.builder().name("张三").age(25).build();
+
+2. 更多功能：
+   - @Slf4j（日志）
+   - @NoArgsConstructor
+   - @AllArgsConstructor
+   - @Synchronized
+
+3. 编译优化：
+   - 无运行时开销
+   - IDE深度集成
+
+【使用场景】
+
+✅ 适合用dataclass：
+- 数据传输对象（DTO）
+- 配置类、参数类
+- 简单的数据容器
+- API请求/响应模型
+- 领域模型（Domain Model）
+
+✅ 适合用Lombok @Data：
+- Java项目（标准选择）
+- 需要构建器模式
+- 企业级应用（Spring Boot集成）
+
+【最佳实践】
+
+1. 默认值：
+   @dataclass
+   class Config:
+       timeout: int = 30  # 默认值
+       retry: int = field(default=3)  # field()方式
+
+2. 不可变：
+   @dataclass(frozen=True)
+   class Point:
+       x: float
+       y: float
+
+3. 自定义方法：
+   @dataclass
+   class Rectangle:
+       width: float
+       height: float
+
+       def area(self) -> float:
+           return self.width * self.height
+
+4. 验证：
+   @dataclass
+   class User:
+       age: int
+
+       def __post_init__(self):
+           if self.age < 0:
+               raise ValueError("年龄不能为负数")
+
+5. 序列化：
+   @dataclass
+   class User:
+       name: str
+
+       def to_dict(self):
+           return asdict(self)
+
+【常见陷阱】
+
+1. 默认值是可变对象：
+   ❌ 错误：
+   @dataclass
+   class Config:
+       items: list = []  # 所有实例共享同一个list！
+
+   ✅ 正确：
+   @dataclass
+   class Config:
+       items: list = field(default_factory=list)
+
+2. 字段顺序：
+   - 无默认值字段必须在有默认值字段之前
+
+3. 继承：
+   - 子类会继承父类字段，注意初始化顺序
+
+【Java开发者迁移建议】
+
+Java POJO → Python @dataclass
+───────────────────────────────
+private字段 + getter/setter → 直接访问属性
+equals/hashCode → 自动生成（可重写）
+toString → __repr__（自动生成）
+构造函数 → __init__（自动生成）
+Builder模式 → 无内置（可手写类方法）
+"""
+
+# ================================
 # 1. 传统类 vs dataclass
 # ================================
 

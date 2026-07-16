@@ -11,6 +11,158 @@ from pathlib import Path
 
 
 # ================================
+# 0. Python logging vs Java日志框架 - 开发者必读
+# ================================
+
+"""
+【Python logging vs Java Log4j2/Logback对比】
+
+| 维度 | Python logging | Log4j2/Logback |
+|-----|---------------|----------------|
+| 核心组件 | Logger, Handler, Formatter, Filter | Logger, Appender, Layout, Filter |
+| 层级命名 | 点号分隔（app.module.sub） | 包名继承（com.app.module） |
+| 配置方式 | basicConfig() 或 dictConfig | XML/YAML配置文件 |
+| 性能 | 简单够用 | 异步Appender、高吞吐 |
+| 生态 | 标准库 | 企业级（ELK、Splunk集成） |
+
+【核心概念映射】
+
+Python logging        Java Logback/Log4j2
+─────────────────────────────────────────
+Logger               Logger
+Handler              Appender
+Formatter            Layout
+Filter               Filter
+logging.basicConfig  logback.xml / log4j2.xml
+dictConfig           YAML配置
+
+【组件职责】
+
+Logger（记录器）：
+- 对应模块/类名（如 "app.service.UserService"）
+- 设置日志级别（DEBUG/INFO/WARNING/ERROR/CRITICAL）
+- 将日志事件传递给Handler
+
+Handler（处理器）：
+- 定义日志输出目标（控制台、文件、网络）
+- 每个Logger可以有多个Handler
+- 常用Handler：StreamHandler, FileHandler, RotatingFileHandler
+
+Formatter（格式化器）：
+- 定义日志格式（时间、级别、消息、位置）
+- 示例：'%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+Filter（过滤器）：
+- 细粒度过滤（按模块、级别、消息内容）
+
+【和Java日志框架的关键差异】
+
+1. 配置方式：
+   Python:
+   logging.basicConfig(
+       level=logging.INFO,
+       format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+       handlers=[logging.FileHandler('app.log')]
+   )
+
+   Java (Logback):
+   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+       <file>app.log</file>
+       <encoder>
+           <pattern>%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %level - %msg%n</pattern>
+       </encoder>
+   </appender>
+
+2. 层级命名：
+   Python: 点号分隔字符串
+   logger = logging.getLogger('app.service.user')
+
+   Java: 包名继承
+   Logger logger = LoggerFactory.getLogger(UserService.class);
+
+3. 性能考量：
+   Python: 单进程够用，高并发需考虑队列Handler
+   Java: 异步Appender，Disruptor高性能队列
+
+【使用场景对比】
+
+✅ Python logging适用：
+- 单体应用、微服务
+- 标准化日志输出
+- 结构化日志（JSON格式）
+- 集成到ELK/Loki
+
+✅ Log4j2/Logback优势：
+- 高并发场景（异步日志）
+- 企业级日志聚合
+- 复杂过滤规则
+- 性能监控集成
+
+【最佳实践】
+
+1. 日志级别选择：
+   DEBUG: 开发调试信息（变量值、执行流程）
+   INFO: 关键业务流程（用户登录、订单创建）
+   WARNING: 潜在问题（配置缺失、性能下降）
+   ERROR: 错误但可恢复（数据库连接失败、API超时）
+   CRITICAL: 严重错误（系统崩溃、数据丢失）
+
+2. 结构化日志：
+   import json
+   import logging
+
+   class JsonFormatter(logging.Formatter):
+       def format(self, record):
+           return json.dumps({
+               'timestamp': self.formatTime(record),
+               'level': record.levelname,
+               'message': record.getMessage(),
+               'module': record.module,
+               'line': record.lineno
+           })
+
+3. 日志文件管理：
+   - 使用RotatingFileHandler自动轮转
+   - 使用TimedRotatingFileHandler按时间切割
+   - 配置日志保留策略（大小、天数）
+
+4. 敏感信息：
+   ❌ 不要记录密码、密钥、个人隐私
+   ✅ 用占位符或脱敏处理
+
+【Java开发者迁移建议】
+
+Logback配置 → Python logging.dictConfig:
+
+LOGGING = {
+    'version': 1,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'INFO'
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'app.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5,
+            'formatter': 'standard'
+        }
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO'
+    }
+}
+"""
+
+# ================================
 # 1. print vs logging
 # ================================
 

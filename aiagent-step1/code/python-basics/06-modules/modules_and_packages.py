@@ -5,6 +5,186 @@ Day 6: 模块和包管理
 """
 
 # ================================
+# 0. 模块和包核心概念 - Java开发者必读
+# ================================
+
+"""
+【核心定义】
+
+模块（Module）：
+- 一个.py文件就是一个模块
+- 模块名 = 文件名（不含.py）
+- 可包含：变量、函数、类
+
+包（Package）：
+- 一个包含__init__.py的目录
+- 用于组织多个模块
+- 包可以有子包（嵌套目录）
+
+【Python模块 vs Java Package对比】
+
+| 特性 | Python模块 | Java Package |
+|-----|-----------|-------------|
+| 定义 | .py文件 | 目录（无特殊文件） |
+| 命名 | 文件名（不含.py） | 目录路径 |
+| 必需文件 | 无（就是.py文件） | 无（就是目录） |
+| 导入语法 | import module | import package.Class |
+| 访问控制 | 无（约定：_开头为私有） | public/private/protected |
+
+【Python包 vs Java Package对比】
+
+| 特性 | Python包 | Java Package |
+|-----|---------|-------------|
+| 定义 | 含__init__.py的目录 | 目录（无特殊文件） |
+| 标识文件 | __init__.py（Python 3.3+可省略） | 无 |
+| 命名空间包 | 支持（无__init__.py） | 无此概念 |
+| 访问控制 | 通过__all__控制from pkg import * | 通过访问修饰符 |
+
+【核心差异】
+
+1. 模块定义：
+   Python:
+   my_module.py  # 这就是一个模块
+   # 导入：import my_module
+
+   Java:
+   package com.example;
+   // MyClass.java 属于包 com.example
+
+2. 包定义：
+   Python:
+   my_package/
+   ├── __init__.py  # 标识这是一个包
+   ├── module1.py
+   └── module2.py
+
+   Java:
+   src/main/java/
+   └── com/example/  # 目录结构决定包名
+       ├── Class1.java  # package com.example;
+       └── Class2.java  # package com.example;
+
+3. __init__.py的作用：
+   - 标识目录为Python包
+   - 可在导入时执行初始化代码
+   - 可定义__all__控制导出
+   - Python 3.3+可省略（命名空间包）
+
+【导入顺序规范】
+
+1. 标准库
+2. 第三方库
+3. 本地模块
+
+import os
+import sys
+
+import numpy as np
+import requests
+
+from my_package import my_module
+
+【导入方式对比】
+
+import module：
+- ✅ 命名空间清晰（module.func()）
+- ✅ 避免命名冲突
+- 适用于：标准库、第三方库
+
+from module import func：
+- ✅ 代码简洁（直接用func()）
+- ❌ 可能命名冲突
+- 适用于：常用函数/类
+
+from module import *：
+- ❌ 污染命名空间
+- ❌ 不明确来源
+- ❌ 难以追踪
+- ❌ 不推荐使用
+
+【相对导入 vs 绝对导入】
+
+绝对导入（推荐）：
+from my_package.submodule import func
+
+相对导入（包内部）：
+from . import sibling_module  # 同级模块
+from .. import parent_module   # 上级模块
+from .submodule import func    # 子模块
+
+【循环导入问题】
+
+场景：模块A导入B，B导入A
+解决方案：
+1. 重构代码，提取公共部分到第三个模块
+2. 在函数内部延迟导入
+
+# 错误：顶层导入
+import module_b
+
+def func():
+    module_b.do_something()
+
+# 正确：函数内导入
+def func():
+    import module_b  # 延迟导入
+    module_b.do_something()
+
+【__name__ == '__main__'】
+
+用途：区分模块是被导入还是直接运行
+
+if __name__ == '__main__':
+    # 直接运行时执行
+    main()
+else:
+    # 被导入时不执行
+
+【最佳实践】
+
+1. 一个模块一个职责
+2. 使用绝对导入（避免相对导入）
+3. 避免from module import *
+4. 在__init__.py中导入公共API
+5. 使用__all__控制from pkg import *
+6. 循环依赖时重构代码
+
+【常见陷阱】
+
+1. 文件名和模块名冲突：
+   # 如果有random.py，会覆盖标准库
+   import random  # 导入的是你的random.py！
+
+2. 导入顺序问题：
+   # 标准库 → 第三方库 → 本地模块
+   # 违反此顺序可能导致混乱
+
+3. 相对导入在脚本中失效：
+   python script.py  # 相对导入失败
+   python -m package.script  # 正确
+
+【Java开发者迁移建议】
+
+Java Package → Python模块
+───────────────────────────────
+package com.example.MyClass; → # my_package/my_module.py
+import com.example.*; → from my_package import *（不推荐）
+import com.example.MyClass; → from my_package import my_module
+src/main/java/ → 项目根目录或PYTHONPATH
+Maven/Gradle → pip + requirements.txt
+
+【pip vs Maven/Gradle】
+
+| 特性 | pip | Maven/Gradle |
+|-----|-----|-------------|
+| 配置文件 | requirements.txt | pom.xml / build.gradle |
+| 安装命令 | pip install -r requirements.txt | mvn install |
+| 版本锁定 | package==1.0.0 | <version>1.0.0</version> |
+| 虚拟环境 | venv, virtualenv | 无内置（用容器） |
+| 依赖传递 | 支持 | 支持 |
+"""
+
+# ================================
 # 1. 模块导入基础
 # ================================
 

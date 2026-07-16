@@ -5,6 +5,156 @@ Day 11: 测试框架
 """
 
 # ================================
+# 0. pytest核心概念 - Java开发者必读
+# ================================
+
+"""
+【pytest vs JUnit对比表】
+
+| 维度 | pytest | JUnit 5 |
+|-----|--------|---------|
+| 测试方法 | def test_xxx() | @Test void testXxx() |
+| 断言 | assert语句 | Assertions.assertEquals() |
+| 前置处理 | @pytest.fixture | @BeforeEach/@BeforeAll |
+| 参数化 | @pytest.mark.parametrize | @ParameterizedTest + @ValueSource |
+| 异常测试 | pytest.raises() | assertThrows() |
+| 跳过测试 | @pytest.mark.skip | @Disabled |
+| Mock | unittest.mock.patch | @Mock + Mockito |
+
+【设计理念差异】
+
+pytest（简单显式）：
+- 使用原生assert语句，无需记忆断言方法名
+- 自动发现测试（test_*.py），无需继承TestCase
+- 夹具通过参数注入，更灵活
+- 一行代码即可写测试
+
+JUnit（结构化规范）：
+- 丰富的断言库（Assertions.*）
+- 注解驱动，生命周期明确
+- 强制结构化组织
+- IDE深度集成
+
+【核心概念映射】
+
+1. 测试方法：
+   JUnit:
+   @Test
+   public void testAddition() {
+       Assertions.assertEquals(3, add(1, 2));
+   }
+
+   pytest:
+   def test_addition():
+       assert add(1, 2) == 3
+
+2. 前置处理：
+   JUnit:
+   @BeforeEach
+   public void setUp() {
+       this.user = new User("test");
+   }
+
+   pytest:
+   @pytest.fixture
+   def user():
+       return User("test")
+
+   def test_user(user):  # 通过参数注入
+       assert user.name == "test"
+
+3. 参数化测试：
+   JUnit:
+   @ParameterizedTest
+   @ValueSource(strings = {"A", "B", "C"})
+   public void testString(String str) {
+       assertNotNull(str);
+   }
+
+   pytest:
+   @pytest.mark.parametrize("str", ["A", "B", "C"])
+   def test_string(str):
+       assert str is not None
+
+4. 异常测试：
+   JUnit:
+   @Test
+   public void testException() {
+       assertThrows(IllegalArgumentException.class, () -> {
+           throw new IllegalArgumentException();
+       });
+   }
+
+   pytest:
+   def test_exception():
+       with pytest.raises(ValueError):
+           raise ValueError()
+
+5. Mock：
+   JUnit (Mockito):
+   @Mock
+   private UserService userService;
+
+   @Test
+   public void testMock() {
+       when(userService.getName()).thenReturn("test");
+   }
+
+   pytest:
+   from unittest.mock import patch
+
+   @patch('module.UserService')
+   def test_mock(mock_service):
+       mock_service.return_value.name = "test"
+
+【pytest的独特优势】
+
+1. 断言重写：
+   pytest会重写assert语句，提供详细错误信息：
+   assert add(1, 2) == 4
+   # 输出: AssertionError: assert 3 == 4
+   #        +  where 3 = add(1, 2)
+
+2. 夹具系统：
+   - 支持夹具依赖注入
+   - 支持夹具作用域（function/class/module/session）
+   - 自动清理资源
+
+3. 内置夹具：
+   - tmp_path：临时目录
+   - capsys：捕获输出
+   - monkeypatch：运行时修改对象
+
+4. 测试发现：
+   自动发现test_*.py和*_test.py
+
+5. 详细输出：
+   pytest -v：详细输出
+   pytest -s：显示print输出
+   pytest --cov：覆盖率报告
+
+【最佳实践】
+
+1. 测试文件命名：test_<模块名>.py
+2. 测试函数命名：test_<被测功能>_<场景>
+3. 一个测试函数只测试一个场景
+4. 使用夹具复用测试数据
+5. 参数化测试减少重复代码
+6. CI集成：pytest --cov --tb=short
+
+【Java开发者迁移建议】
+
+- @Test → def test_xxx():
+- @BeforeEach → @pytest.fixture
+- @BeforeAll → @pytest.fixture(scope="class")
+- Assertions.assertEquals() → assert x == y
+- @ParameterizedTest → @pytest.mark.parametrize
+- assertThrows() → pytest.raises()
+- @Disabled → @pytest.mark.skip
+- Mockito @Mock → unittest.mock.patch
+"""
+
+# ================================
 # 1. pytest 基础
 # ================================
 

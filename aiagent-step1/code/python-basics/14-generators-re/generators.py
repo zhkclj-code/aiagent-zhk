@@ -11,6 +11,191 @@ from typing import Iterator, Generator
 
 
 # ================================
+# 0. Generator核心概念 - Java开发者必读
+# ================================
+
+"""
+【什么是生成器】
+生成器是一种特殊的迭代器，使用yield关键字逐个产出值。
+核心特性：惰性求值（Lazy Evaluation）+ 固定内存开销。
+
+【Generator vs Java Stream/Iterator对比】
+
+| 特性 | Python Generator | Java Stream | Java Iterator |
+|-----|-----------------|------------|-------------|
+| 语法 | yield关键字 | Stream API | Iterator接口 |
+| 惰性求值 | ✅ 天然支持 | ✅ 支持 | ✅ 支持 |
+| 无限序列 | ✅ 支持 | ✅ 支持 | ✅ 支持 |
+| 管道操作 | ❌ 无内置 | ✅ filter/map/reduce | ❌ 无 |
+| 并行处理 | ❌ 不支持 | ✅ parallelStream() | ❌ 不支持 |
+| 内存开销 | ~100 bytes | ~100 bytes | ~100 bytes |
+| 多次遍历 | ❌ 一次性 | ❌ 一次性 | ❌ 一次性 |
+
+【核心差异】
+
+1. 语法风格：
+   Python:
+   def squares(n):
+       for i in range(n):
+           yield i * i
+
+   Java Stream:
+   IntStream.range(0, n)
+            .map(i -> i * i)
+            .forEach(System.out::println);
+
+2. 管道操作：
+   Java Stream有丰富的中间操作：
+   list.stream()
+       .filter(x -> x > 10)
+       .map(x -> x * 2)
+       .sorted()
+       .collect(Collectors.toList());
+
+   Python生成器需要手写循环：
+   (x * 2 for x in list if x > 10)  # 生成器表达式
+
+3. 并行处理：
+   Java:
+   list.parallelStream().map(...)
+
+   Python:
+   无内置并行（可用multiprocessing替代）
+
+【内存效率对比】
+
+处理1,000,000个数字：
+
+Python:
+def squares(n):
+    for i in range(n):
+        yield i * i
+
+gen = squares(1_000_000)
+# 内存占用：~100 bytes（固定开销）
+
+Java Stream:
+IntStream squares = IntStream.range(0, 1_000_000).map(i -> i * i);
+// 内存占用：~100 bytes（固定开销）
+
+Java List:
+List<Integer> list = new ArrayList<>();
+for (int i = 0; i < 1_000_000; i++) {
+    list.add(i * i);
+}
+// 内存占用：~40 MB（存储所有元素）
+
+【使用场景】
+
+✅ Python Generator适用：
+- 大文件读取（逐行处理）
+- 数据流处理（LLM流式输出）
+- 无限序列（数学序列、传感器数据）
+- 内存敏感场景（处理GB级文件）
+
+✅ Java Stream适用：
+- 集合转换和过滤
+- 并行数据处理
+- 函数式编程风格
+- 复杂的管道操作
+
+【核心概念】
+
+yield关键字：
+- 暂停函数执行，返回一个值
+- 保存函数状态（局部变量、执行位置）
+- 下次调用从yield后继续执行
+
+def count_up(n):
+    for i in range(n):
+        yield i  # 暂停，返回i
+        # 下次调用从这里继续
+
+# 执行流程：
+gen = count_up(3)  # 创建生成器对象
+next(gen)  # 执行到yield，返回0
+next(gen)  # 从上次yield后继续，返回1
+next(gen)  # 返回2
+next(gen)  # StopIteration异常
+
+【和Java Iterator的区别】
+
+Java Iterator:
+public interface Iterator<E> {
+    boolean hasNext();
+    E next();
+}
+
+Python Generator:
+- 自动实现__iter__和__next__
+- 无需手写hasNext逻辑
+- 函数结束时自动抛出StopIteration
+
+【最佳实践】
+
+1. 大数据流式处理：
+   def read_large_file(file_path):
+       with open(file_path) as f:
+           for line in f:
+               yield line.strip()
+
+2. 无限序列：
+   def fibonacci():
+       a, b = 0, 1
+       while True:
+           yield a
+           a, b = b, a + b
+
+3. yield from（委托生成器）：
+   def chain(*iterables):
+       for it in iterables:
+           yield from it
+
+【常见陷阱】
+
+1. 生成器是一次性的：
+   gen = (x for x in range(3))
+   list(gen)  # [0, 1, 2]
+   list(gen)  # []（已耗尽）
+
+2. 无法获取长度：
+   gen = (x for x in range(100))
+   len(gen)  # TypeError
+
+3. 无法回溯：
+   gen = (x for x in range(5))
+   next(gen)  # 0
+   # 无法回到开始，只能继续向前
+
+【Java开发者迁移建议】
+
+Java Stream API → Python Generator
+─────────────────────────────────────
+stream.filter() → (x for x in gen if condition)
+stream.map() → (f(x) for x in gen)
+stream.forEach() → for x in gen: ...
+stream.collect() → list(gen)
+Stream.iterate() → while True: yield
+parallelStream() → multiprocessing.Pool
+
+【性能考量】
+
+生成器开销：
+- 优点：固定内存，适合大数据
+- 缺点：每次yield有函数调用开销
+
+列表开销：
+- 优点：O(1)随机访问，可重复遍历
+- 缺点：内存随元素数量增长
+
+决策：
+- 数据量小（<1000）且需多次访问 → 用列表
+- 数据量大（>10000）或流式处理 → 用生成器
+- 需要随机访问 → 用列表
+- 只需顺序遍历 → 用生成器
+"""
+
+# ================================
 # Part A: 生成器（yield）
 # ================================
 

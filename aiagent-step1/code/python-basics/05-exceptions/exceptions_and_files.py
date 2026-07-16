@@ -5,6 +5,160 @@ Day 5: 异常处理和文件操作
 """
 
 # ================================
+# 0. 异常处理核心概念 - Java开发者必读
+# ================================
+
+"""
+【Python异常 vs Java异常对比】
+
+| 维度 | Python | Java |
+|-----|--------|------|
+| 检查类型 | 无检查型异常 | 检查型+非检查型 |
+| 异常层次 | BaseException → Exception | Throwable → Exception/Error |
+| 必须捕获 | 否 | 检查型异常必须捕获/声明 |
+| try语法 | try/except/finally/else | try/catch/finally |
+| 抛出异常 | raise Exception() | throw new Exception() |
+
+【核心差异】
+
+1. 检查型异常：
+   Java:
+   public void readFile() throws IOException {
+       // 必须声明或捕获IOException
+   }
+
+   Python:
+   def read_file():
+       # 无需声明可能抛出的异常
+       # 不强制捕获任何异常
+
+2. 异常层次：
+   Python:
+   BaseException
+   ├── SystemExit（sys.exit()）
+   ├── KeyboardInterrupt（Ctrl+C）
+   └── Exception（所有应用异常）
+       ├── ValueError
+       ├── TypeError
+       └── IOError
+
+   Java:
+   Throwable
+   ├── Error（JVM错误，不应捕获）
+   └── Exception
+       ├── IOException（检查型）
+       ├── SQLException（检查型）
+       └── RuntimeException（非检查型）
+           ├── NullPointerException
+           └── IllegalArgumentException
+
+【最佳实践】
+
+1. ❌ 不要使用裸except：
+   # 错误示例：
+   except:  # 会捕获所有异常，包括KeyboardInterrupt、SystemExit
+       pass
+
+   # 正确示例：
+   except Exception as e:  # 只捕获Exception及其子类
+       pass
+
+2. ✅ 明确指定异常类型：
+   # 好
+   except FileNotFoundError as e:
+       handle_file_error(e)
+
+   # 不好
+   except Exception:
+       pass  # 吞掉所有异常
+
+3. ✅ 使用异常链保留上下文：
+   try:
+       process_data()
+   except ValueError as e:
+       raise DataProcessingError("处理失败") from e
+       # 保留原始异常的堆栈信息
+
+4. ✅ 使用else子句（无异常时执行）：
+   try:
+       data = read_file()
+   except FileNotFoundError:
+       print("文件不存在")
+   else:
+       # 只有try块成功时才执行
+       process(data)
+
+5. ✅ 使用finally清理资源：
+   try:
+       f = open('file.txt')
+       process(f)
+   finally:
+       f.close()  # 无论是否异常都会执行
+
+   # 更好：使用with语句
+   with open('file.txt') as f:
+       process(f)  # 自动关闭
+
+【异常处理原则】
+
+1. 只捕获你能处理的异常
+2. 不要用异常做流程控制
+3. 在合适的层次捕获异常
+4. 保留有意义的异常信息
+5. 记录异常日志
+
+【常见陷阱】
+
+1. 捕获过于宽泛：
+   ❌ except Exception:
+   ✅ except (ValueError, TypeError):
+
+2. 吞掉异常：
+   ❌ except: pass
+   ✅ except Exception as e: logger.error(...)
+
+3. 忘记重新抛出：
+   try:
+       operation()
+   except Exception as e:
+       cleanup()
+       # 忘记raise，异常被吞掉
+       raise  # 重新抛出当前异常
+
+【何时创建自定义异常】
+
+✅ 需要自定义异常：
+- 区分不同类型的错误
+- 携带额外错误信息
+- 特定异常需要特殊处理
+
+示例：
+class AgentError(Exception):
+    \"\"\"Agent相关错误的基类\"\"\"
+    pass
+
+class ToolNotFoundError(AgentError):
+    \"\"\"工具未找到\"\"\"
+    def __init__(self, tool_name: str):
+        self.tool_name = tool_name
+        super().__init__(f"工具 '{tool_name}' 不存在")
+
+class LLMTimeoutError(AgentError):
+    \"\"\"LLM调用超时\"\"\"
+    def __init__(self, timeout: float):
+        self.timeout = timeout
+        super().__init__(f"LLM调用超时 ({timeout}s)")
+
+【Java开发者迁移建议】
+
+try-catch-finally → try-except-finally-else
+throws声明 → 无需声明
+throw new X() → raise X()
+catch(Exception e) → except Exception as e
+catch(IOException | SQLException e) → except (IOError, SQLError) as e
+"""
+
+# ================================
 # 1. 异常处理基础
 # ================================
 
