@@ -122,9 +122,11 @@ print(f't.fahrenheit = {t.fahrenheit}')
 # TODO: 创建 FileManager 类，使用 __enter__ 和 __exit__ 管理文件
 class FileManager:
 
-    def __enter__():
+    def __enter__(self):
         pass
 
+    def __exit__(self):
+        pass
 # TODO: 测试文件管理器
 
 
