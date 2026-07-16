@@ -16,6 +16,13 @@ async def test_fake_client_requests_calculator_for_calculation_prompt() -> None:
     assert reply.tool_calls[0].arguments == {"expression": "2 + 2"}
 
 
+async def test_fake_client_uses_deterministic_tool_call_ids() -> None:
+    client = FakeLLMClient()
+    first = await client.complete([Message(role="user", content="计算 1 + 1")], tools=[])
+    second = await client.complete([Message(role="user", content="现在是什么时间")], tools=[])
+    assert [first.tool_calls[0].id, second.tool_calls[0].id] == ["fake-1", "fake-2"]
+
+
 async def test_fake_client_turns_tool_result_into_final_answer() -> None:
     reply = await FakeLLMClient().complete(
         [Message(role="tool", content="4", name="calculator", tool_call_id="x")],

@@ -2,9 +2,9 @@
 
 from collections import deque
 from collections.abc import Iterable
+from itertools import count
 import json
 from typing import Any, Protocol
-from uuid import uuid4
 
 from openai import AsyncOpenAI
 
@@ -28,6 +28,7 @@ class FakeLLMClient:
 
     def __init__(self, replies: Iterable[LLMReply] | None = None) -> None:
         self._scripted = deque(replies) if replies is not None else None
+        self._call_ids = count(1)
 
     async def complete(
         self,
@@ -51,7 +52,7 @@ class FakeLLMClient:
             return LLMReply(
                 tool_calls=[
                     ToolCall(
-                        id=f"fake-{uuid4().hex[:8]}",
+                        id=f"fake-{next(self._call_ids)}",
                         name="calculator",
                         arguments={"expression": content.removeprefix("计算 ").strip()},
                     )
@@ -61,7 +62,7 @@ class FakeLLMClient:
             return LLMReply(
                 tool_calls=[
                     ToolCall(
-                        id=f"fake-{uuid4().hex[:8]}",
+                        id=f"fake-{next(self._call_ids)}",
                         name="current_time",
                         arguments={},
                     )

@@ -52,6 +52,10 @@ class CalculatorTool:
     }
 
     def run(self, arguments: dict[str, Any]) -> str:
+        unexpected = set(arguments) - {"expression"}
+        if unexpected:
+            names = ", ".join(sorted(unexpected))
+            raise ToolError(f"不支持的参数: {names}")
         expression = arguments.get("expression")
         if not isinstance(expression, str) or not expression.strip():
             raise ToolError("expression 必须是非空字符串")

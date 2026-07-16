@@ -11,6 +11,11 @@ def test_calculator_evaluates_allowed_arithmetic() -> None:
     assert CalculatorTool().run({"expression": "2 + 3 * 4"}) == "14"
 
 
+def test_calculator_rejects_unexpected_arguments() -> None:
+    with pytest.raises(ToolError, match="不支持的参数"):
+        CalculatorTool().run({"expression": "2 + 2", "unexpected": True})
+
+
 @pytest.mark.parametrize("expression", ["__import__('os')", "2 ** 100", "name + 1"])
 def test_calculator_rejects_unsafe_expressions(expression: str) -> None:
     with pytest.raises(ToolError):
