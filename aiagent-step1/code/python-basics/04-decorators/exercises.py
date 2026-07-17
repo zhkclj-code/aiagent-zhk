@@ -123,22 +123,53 @@ print(f't.fahrenheit = {t.fahrenheit}')
 class FileManager:
 
     def __enter__(self):
-        pass
+        print('获取资源')
+        # note:一定要返回self，因为with默认会触发这个，并且返回值赋值给变量f使用
+        return self
 
-    def __exit__(self):
-        pass
+    def __exit__(self, exc_type, exc, tb):
+        if exc is not None:
+            print(f'发生异常{exc_type}, {exc}')
+            print(f'tb = {tb}')
+        print('释放资源')
+
+    def write(self, path):
+        if not isinstance(path, str):
+            raise TypeError("只支持字符串类型")
+        print(f'文件{path}开始写入')
+
 # TODO: 测试文件管理器
+with FileManager() as f:
+    f.write('/usrs/admin/aa.txt')
+    # note:能catch处理异常，最后exit能成功调用，但是最后异常还会在finally raise原样抛出对吧
+    # f.write(1111)
+    f.write("/aaa")
 
+with FileManager() as f:
+    f.write("/aaa")
 
 # ================================
 # 练习 6：contextlib
 # ================================
 
 # TODO: 使用 @contextmanager 创建计时上下文管理器
+from contextlib import contextmanager
 
+@contextmanager
+def exe_test1():
+    start = time.time()
+    yield
+    end = time.time()
+    print(f'耗时 = {end-start}')
 
 # TODO: 测试上下文管理器
+with exe_test1():
+    time.sleep(1)
+    print('开始测试')
 
+# note：只有with才能用上下文管理并执行，否则只有exe_test1()不会按上下文管理顺序执行，只会创建包装的管理器对象contextlib._GeneratorContextManager
+obj = exe_test1()
+print(f'obj = {obj}')
 
 # ================================
 # 验证区域
