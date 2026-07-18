@@ -24,9 +24,19 @@ print(safe_divide(10, "2")) # 输出：错误：参数类型不正确
 """
 
 # TODO: 在这里实现 safe_divide 函数
+def devide_0(a, b) -> float:
+    try:
+        return a/b
+    except ZeroDivisionError as e:
+        print("错误：除数不能为零")
+    except TypeError as e:
+        print('错误：参数类型不正确')
 
+    return 0
 
-
+rst0 = devide_0(1,0)
+rst1 = devide_0(1,2)
+print(f'rst0={rst0},rst1={rst1}')
 
 # ================================
 # 练习 2：自定义异常
@@ -55,6 +65,22 @@ except InvalidEmailError as e:
 """
 
 # TODO: 在这里实现自定义异常和验证函数
+class InvalidAgeError(Exception):
+    def __init__(self, age, message):
+        self._age = age
+        self._message = message
+        super().__init__(f'{message}:{age}')
+
+def validate_age(age) -> bool:
+    if age < 1 or age > 200:
+        raise InvalidAgeError(age, '年龄无效')
+    return True
+
+print(f'年龄验证：{validate_age(88)}')
+try:
+    validate_age(800)
+except InvalidAgeError as e:
+    print(f'异常了:{e}')
 
 
 
@@ -77,6 +103,16 @@ print(f"文件有 {lines} 行")
 """
 
 # TODO: 在这里实现 count_lines 函数
+def read_count(path: str) -> int:
+    try:
+        with open(path, 'r', encoding='utf8') as f:
+            return len(f.readlines())
+    except FileNotFoundError as e:
+        print('文件不存在')
+        return 0
+
+rows = read_count('py5_test.txt')
+print(f'rows = {rows}')
 
 
 
@@ -97,9 +133,19 @@ print(f"文件有 {lines} 行")
 write_log("app.log", "系统启动")
 write_log("app.log", "用户登录")
 """
-
+import time
 # TODO: 在这里实现 write_log 函数
+def write_log(path:str, logMsg:str):
+    # note：时间格式化不是yyyy-MM-dd这张
+    logMsg = time.strftime('%Y-%m-%d %H:%M:%S   ') +  logMsg
 
+    try:
+        with open(path, 'a', encoding='utf8') as f:
+            f.write(logMsg)
+    except PermissionError as e:
+        pass
+
+write_log('py5_test.txt', '系统启动完成\n')
 
 
 
@@ -121,9 +167,24 @@ write_config("config.json", config)
 loaded_config = read_config("config.json")
 print(loaded_config)
 """
-
+import json
 # TODO: 在这里实现 read_config 和 write_config 函数
+def read_config(path):
+    with open(path, 'r', encoding='utf8') as f:
+        return json.load(f)
 
+def write_config(path, config):
+    with open(path, 'w', encoding='utf8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+
+
+config = {"name": "张三", "age": 25, "city": "北京"}
+
+json_obj = read_config('py5_config.json')
+print(f'{json_obj["name"]}')
+print(f'json_obj = {json_obj}')
+
+write_config('py5_config.json', config)
 
 
 
@@ -148,8 +209,27 @@ loaded_students = read_csv("students.csv")
 for student in loaded_students:
     print(student)
 """
-
+import csv
 # TODO: 在这里实现 read_csv 和 write_csv 函数
+def read_csv(path):
+    with open(path, 'r', encoding='utf8') as f:
+        csv_dict = csv.DictReader(f)
+        for row in csv_dict:
+            print(f'csv_dict row= {row}')
+
+read_csv('py5.csv')
+
+students = [
+    {"name": "张三feng", "age": 18, "score": 90},
+    {"name": "李四gou", "age": 19, "score": 85}
+]
+def write_csv(path, data):
+    # note:为什么需要处理newline，才能避免空行
+    with open(path, 'w', encoding='utf8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['name', 'age', 'score'])
+        writer.writeheader()
+        writer.writerows(data)
+write_csv('py5.csv', students)
 
 
 
@@ -172,6 +252,18 @@ for line_num, line in results:
 """
 
 # TODO: 在这里实现 search_in_file 函数
+def search_in_file(path, keyword):
+    rst = []
+    with open(path, 'r', encoding='utf8') as f:
+        for index, line in enumerate(f.readlines(), 1):
+            findRst = str(line).find(keyword)
+            if findRst >= 0:
+                rst_tmp = {index:line}
+                rst.append(rst_tmp)
+    return rst
+
+rst = search_in_file('py5.csv', '张三')
+print(f'rst = {rst}')
 
 
 
@@ -184,49 +276,49 @@ if __name__ == "__main__":
     import json
     import csv
     from datetime import datetime
-    
+
     print("=" * 60)
     print("Day 5 练习验证")
     print("=" * 60)
-    
+
     # 测试练习 1
     print("\n--- 练习 1：safe_divide ---")
     # print(safe_divide(10, 2))
     # print(safe_divide(10, 0))
     # print(safe_divide(10, "2"))
-    
+
     # 测试练习 2
     print("\n--- 练习 2：自定义异常 ---")
     # try:
     #     validate_age(-5)
     # except InvalidAgeError as e:
     #     print(e)
-    
+
     # 测试练习 3
     print("\n--- 练习 3：count_lines ---")
     # lines = count_lines("test.txt")
     # print(f"文件有 {lines} 行")
-    
+
     # 测试练习 4
     print("\n--- 练习 4：write_log ---")
     # write_log("app.log", "系统启动")
-    
+
     # 测试练习 5
     print("\n--- 练习 5：JSON 配置 ---")
     # config = {"name": "张三", "age": 25}
     # write_config("config.json", config)
     # print(read_config("config.json"))
-    
+
     # 测试练习 6
     print("\n--- 练习 6：CSV 文件 ---")
     # students = [{"name": "张三", "age": 18}]
     # write_csv("students.csv", students)
     # print(read_csv("students.csv"))
-    
+
     # 测试练习 7
     print("\n--- 练习 7：文件搜索 ---")
     # results = search_in_file("test.txt", "Python")
     # for line_num, line in results:
     #     print(f"第 {line_num} 行: {line}")
-    
+
     print("\n✅ Day 5 练习完成！")

@@ -458,14 +458,14 @@ with open(csv_file, "r", encoding="utf-8") as f:
 # 自定义上下文管理器
 class Timer:
     """计时器上下文管理器"""
-    
+
     def __enter__(self):
         """进入上下文"""
         import time
         self.start_time = time.time()
         print("计时开始...")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """退出上下文"""
         import time
@@ -523,12 +523,12 @@ def write_dict_to_csv(data: list[dict], filename: str):
     """将字典列表写入 CSV"""
     if not data:
         return
-    
+
     with open(filename, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
-    
+
     print(f"CSV 文件已保存: {filename}")
 
 write_dict_to_csv(students, "exercise.csv")
@@ -555,11 +555,11 @@ except InvalidEmailError as e:
 # 练习 5：使用上下文管理器，实现文件备份
 class FileBackup:
     """文件备份上下文管理器"""
-    
+
     def __init__(self, filename: str):
         self.filename = filename
         self.backup_file = f"{filename}.bak"
-    
+
     def __enter__(self):
         """备份原文件"""
         import shutil
@@ -569,7 +569,7 @@ class FileBackup:
         except FileNotFoundError:
             print(f"原文件不存在，无需备份")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """恢复备份（如果出错）"""
         if exc_type:
