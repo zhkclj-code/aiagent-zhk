@@ -265,11 +265,11 @@ def greet(name: str) -> str:
 # 模块类
 class Calculator:
     \"\"\"计算器类\"\"\"
-    
+
     @staticmethod
     def add(a: int, b: int) -> int:
         return a + b
-    
+
     @staticmethod
     def multiply(a: int, b: int) -> int:
         return a * b
