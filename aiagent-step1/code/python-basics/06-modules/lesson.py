@@ -212,7 +212,7 @@ print("\n导入方式对比:")
 
 # 方式 1：导入整个模块
 import math
-print(f"方式 1 - math.pi = {math.pi}")
+print(f"方式 1 - math.pi = {math.pi:.2f}")
 
 # 方式 2：导入特定函数
 from math import sqrt, pow
@@ -362,6 +362,7 @@ result = subprocess.run(
 
 print("已安装的包（前 10 个）:")
 lines = result.stdout.split('\n')
+# 由于存在表头和分隔符格式
 for line in lines[:12]:
     print(f"  {line}")
 
@@ -504,6 +505,39 @@ print("练习题")
 print("="*60)
 
 # 练习 1：创建一个计算器模块
+temp_dir2 = tempfile.mkdtemp()
+sys.path.insert(0, temp_dir2)
+print(f'temp_dir2 = {temp_dir2}')
+print(f'sys.path = {sys.path}')
+cal_module = os.path.join(temp_dir2, "calculator.py")
+with open(cal_module, 'w', encoding='utf8') as f:
+    f.write(
+        """
+# 计算器模块
+def add(a, b) -> int:
+    return a+b
+
+def sub(a,b) -> int:
+    return a-b
+
+def mul(a,b) -> int:
+    return a*b
+
+def div(a,b) -> float:
+    if b == 0:
+        raise ZeroDivisionError("除数不能为0")
+    return a/b
+
+
+"""
+    )
+
+import calculator
+rst = calculator.add(1, 2)
+print(f"add rst = {rst}")
+
+    
+
 calculator_module = os.path.join(temp_dir, "calculator.py")
 with open(calculator_module, "w", encoding="utf-8") as f:
     f.write("""

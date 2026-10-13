@@ -324,6 +324,7 @@ class Book:
 
 
 book = Book("Python编程", "Eric Matthes", 59.9)
+# book.price = -1
 print(f"练习 1 - 图书: {book}")
 
 

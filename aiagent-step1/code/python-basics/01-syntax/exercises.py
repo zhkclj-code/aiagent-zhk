@@ -25,6 +25,7 @@ python = 1
 
 # TODO: 使用 print() 和 f-string 打印这些变量
 print(f"my name is {name}, age is {age}, python study days is {python}")
+print(f"my name is {name}, age = {age}, {python} study days")
 
 
 # ================================
